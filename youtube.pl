@@ -21,6 +21,7 @@ $VERSION = '20111014';
 # 20090206 - some further fixes
 # 20110913 - added support for youtu.be links
 # 20111014 - changed regex so that it finds the v parameter even if it's not first
+# 20111014 - added &#39; to htmlfix list
 #
 # usage:
 # /script load youtube
@@ -34,6 +35,7 @@ sub htmlfix {
 	$s =~ s!&quot;!"!g;
 	$s =~ s!&rsquo;!'!g;
 	$s =~ s!&\#039;!'!g;
+	$s =~ s!&\#39;!'!g;
 	$s =~ s!&ndash;!-!g;
 	$s =~ s!&lt;!<!g;
 	$s =~ s!&gt;!>!g;
