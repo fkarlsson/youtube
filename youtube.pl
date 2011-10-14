@@ -4,7 +4,7 @@ use vars qw($VERSION %IRSSI);
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20100913';
+$VERSION = '20111014';
 %IRSSI = (
 	authors     => 'tuqs',
 	contact     => 'tuqs@core.ws',
@@ -19,7 +19,8 @@ $VERSION = '20100913';
 # 20081105 - function rewrite
 # 20081226 - fixed regex
 # 20090206 - some further fixes
-# 20100913 - added support for youtu.be links
+# 20110913 - added support for youtu.be links
+# 20111014 - changed regex so that it finds the v parameter even if it's not first
 #
 # usage:
 # /script load youtube
@@ -47,9 +48,9 @@ sub youtube {
 	my ( $server, $msg, $nick, $addr, $target ) = @_;
 	my $window = $server->window_find_item($target);
 
-	if ($msg =~ /(youtube\.com\/watch\?v=|youtu\.be\/)(.{11})/) {
+	if ($msg =~ /((youtube\.com\/watch\?).*v=|youtu\.be\/)(.{11})/) {
 		my $ua = LWP::UserAgent->new;
-		my $r = $ua->get("http://m.youtube.com/details?v=$2&warned=1&hl=en&fulldescription=1");
+		my $r = $ua->get("http://m.youtube.com/details?v=$3&warned=1&hl=en&fulldescription=1");
 		Irssi::signal_continue(@_);
 		return unless defined $r;
 
