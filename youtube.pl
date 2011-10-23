@@ -1,10 +1,11 @@
 use strict;
 use vars qw($VERSION %IRSSI);
+use Data::Dumper;
 
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20111014';
+$VERSION = '20111023';
 %IRSSI = (
 	authors     => 'tuqs',
 	contact     => 'tuqs@core.ws',
@@ -22,47 +23,66 @@ $VERSION = '20111014';
 # 20110913 - added support for youtu.be links
 # 20111014 - changed regex so that it finds the v parameter even if it's not first
 # 20111014 - added &#39; to htmlfix list
+# 20111023 - improved regex and now uses youtube api instead
 #
 # usage:
 # /script load youtube
 # enjoy ;o)
 #
 
+sub uri_public { 
+    my ($server, $data, $nick, $mask, $target) = @_; 
+    my $retval = uri_get($data); 
+    my $win = $server->window_item_find($target); 
+    Irssi::signal_continue(@_);
 
-sub htmlfix {
-	my $s = shift;
-	$s =~ s!&amp;!&!g;
-	$s =~ s!&quot;!"!g;
-	$s =~ s!&rsquo;!'!g;
-	$s =~ s!&\#039;!'!g;
-	$s =~ s!&\#39;!'!g;
-	$s =~ s!&ndash;!-!g;
-	$s =~ s!&lt;!<!g;
-	$s =~ s!&gt;!>!g;
-	$s =~ s!</?br\s?/?>! !g;
-	$s =~ s!\(<a.+>more</a>\)!!gi; # remove more
-	$s =~ s!<a.+>.+</a>!!g; # remove links
-	$s =~ s/\s+$//g; # last but not least remove tailing blanks
-	return $s;
-}
+    if ($win) { 
+        $win->print("%_YouTube:%_ $retval", MSGLEVEL_CRAP) if $retval; 
+    } else { 
+        Irssi::print("%_YouTube:%_ $retval") if $retval; 
+    } 
+} 
+sub uri_private { 
+    my ($server, $data, $nick, $mask) = @_; 
+    my $retval = spotifyuri_get($data); 
+    my $win = Irssi::window_find_name('(msgs)'); 
+    Irssi::signal_continue(@_);
 
-sub youtube {
-	my ( $server, $msg, $nick, $addr, $target ) = @_;
-	my $window = $server->window_find_item($target);
+    if ($win) { 
+        $win->print("%_YouTube:%_ $retval", MSGLEVEL_CRAP) if $retval; 
+    } else { 
+        Irssi::print("%_YouTube:%_ $retval") if $retval; 
+    } 
+} 
+sub uri_parse { 
+    my ($url) = @_; 
+    if ($url =~ /(youtube\.com\/|youtu\.be\/).*([a-zA-Z0-9]{11})/) { 
+        return "http://gdata.youtube.com/feeds/api/videos?q=$2&max-results=1&v=2&alt=jsonc";
+    } 
+    return 0; 
+} 
+sub uri_get { 
+    my ($data) = @_; 
 
-	if ($msg =~ /((youtube\.com\/watch\?).*v=|youtu\.be\/)(.{11})/) {
-		my $ua = LWP::UserAgent->new;
-		my $r = $ua->get("http://m.youtube.com/details?v=$3&warned=1&hl=en&fulldescription=1");
-		Irssi::signal_continue(@_);
-		return unless defined $r;
+    my $url = uri_parse($data); 
 
-		# yes i know, parsing html with regular expressions is stupid
-		# but i want to keep the dependencies as minimal as possible
-		$r->content =~ /<title>YouTube\s-\s(.+)<\/title>/;
-		if (defined $1) {
-			$window->command("echo ".chr(3)."0"."YouTube:".chr(3)." ".htmlfix($1));
-		}
-	}
-}
+    my $ua = LWP::UserAgent->new(env_proxy=>1, keep_alive=>1, timeout=>5); 
+    $ua->agent("irssi/$VERSION " . $ua->agent()); 
 
-Irssi::signal_add_first('message public', \&youtube);
+    my $req = HTTP::Request->new('GET', $url); 
+    my $res = $ua->request($req);
+
+    if ($res->is_success()) { 
+        my $json = JSON->new->utf8;
+        my $json_data = $json->decode($res->content());
+        my $result_string = '';
+
+        $result_string = @{$json_data->{data}->{items}}[0]->{title};
+
+       	return $result_string; 
+    } 
+    return 0; 
+} 
+
+Irssi::signal_add_last('message public', 'uri_public'); 
+Irssi::signal_add_last('message private', 'uri_private'); 

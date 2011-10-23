@@ -1,7 +1,11 @@
-Youtube Title Lookup Irssi Script
+YouTube URI Lookup Irssi Script - It's better than your mama!
 
-Parses Youtube links and outputs the title of the video to the channel window.
+Parses Youtube URIs and uses Youtube's Data API (http://code.google.com/apis/youtube/overview.html) to output the link info to the channel window.
 
-Put the script in your Irssi scripts folder, run it and it just works.
+Also works in query windows, though you might get unexpected results if you are not using the "(msgs)" window for queries. Comments/improvments regarding this are more than welcome!
 
-I just made a small update to add support for youtu.be-links, but since I couldn't find the script hosted anywhere online I decided to put it up on github. Thanks to the original author tuqs!
+Put the script in your Irssi scripts folder, run it and it just works. Tested in Perl 5.10.
+
+License blah blah: Do whatever you want with it, give credit to me if you think I deserve it. :)
+
+Thanks to the original author tuqs!
