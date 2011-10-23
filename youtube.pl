@@ -7,12 +7,12 @@ use LWP::UserAgent;
 use Irssi;
 $VERSION = '20111023';
 %IRSSI = (
-	authors     => 'tuqs',
-	contact     => 'tuqs@core.ws',
-	name        => 'youtube',
-	description => 'shows the title and description from the video',
-	license     => 'Public Domain',
-	changed     => $VERSION,
+    authors     => 'tuqs',
+    contact     => 'tuqs@core.ws',
+    name        => 'youtube',
+    description => 'shows the title and description from the video',
+    license     => 'Public Domain',
+    changed     => $VERSION,
 );
 
 
@@ -24,6 +24,7 @@ $VERSION = '20111023';
 # 20111014 - changed regex so that it finds the v parameter even if it's not first
 # 20111014 - added &#39; to htmlfix list
 # 20111023 - improved regex and now uses youtube api instead
+# 20111023 - improved regex some more and added detection of removed videos >:)
 #
 # usage:
 # /script load youtube
@@ -56,7 +57,7 @@ sub uri_private {
 } 
 sub uri_parse { 
     my ($url) = @_; 
-    if ($url =~ /(youtube\.com\/|youtu\.be\/).*([a-zA-Z0-9]{11})/) { 
+    if ($url =~ /(youtube\.com\/|youtu\.be\/).*([a-zA-Z0-9\-_]{11})/) { 
         return "http://gdata.youtube.com/feeds/api/videos?q=$2&max-results=1&v=2&alt=jsonc";
     } 
     return 0; 
@@ -77,11 +78,15 @@ sub uri_get {
         my $json_data = $json->decode($res->content());
         my $result_string = '';
 
-        $result_string = @{$json_data->{data}->{items}}[0]->{title};
+        eval {
+            $result_string = @{$json_data->{data}->{items}}[0]->{title};
+        } or do {
+            $result_string = "Video error!";
+        };
 
-       	return $result_string; 
+        return $result_string; 
     } 
-    return 0; 
+    return 0;
 } 
 
 Irssi::signal_add_last('message public', 'uri_public'); 
