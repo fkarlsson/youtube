@@ -5,7 +5,7 @@ use Data::Dumper;
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20111023';
+$VERSION = '20111024';
 %IRSSI = (
     authors     => 'tuqs',
     contact     => 'tuqs@core.ws',
@@ -25,6 +25,7 @@ $VERSION = '20111023';
 # 20111014 - added &#39; to htmlfix list
 # 20111023 - improved regex and now uses youtube api instead
 # 20111023 - improved regex some more and added detection of removed videos >:)
+# 20111024 - fixed bug that caused certain id's to not work with api, fixed typo
 #
 # usage:
 # /script load youtube
@@ -45,7 +46,7 @@ sub uri_public {
 } 
 sub uri_private { 
     my ($server, $data, $nick, $mask) = @_; 
-    my $retval = spotifyuri_get($data); 
+    my $retval = uri_get($data); 
     my $win = Irssi::window_find_name('(msgs)'); 
     Irssi::signal_continue(@_);
 
@@ -58,7 +59,7 @@ sub uri_private {
 sub uri_parse { 
     my ($url) = @_; 
     if ($url =~ /(youtube\.com\/|youtu\.be\/).*([a-zA-Z0-9\-_]{11})/) { 
-        return "http://gdata.youtube.com/feeds/api/videos?q=$2&max-results=1&v=2&alt=jsonc";
+        return "http://gdata.youtube.com/feeds/api/videos/$2?v=2&alt=jsonc";
     } 
     return 0; 
 } 
@@ -79,7 +80,7 @@ sub uri_get {
         my $result_string = '';
 
         eval {
-            $result_string = @{$json_data->{data}->{items}}[0]->{title};
+            $result_string = $json_data->{data}->{title};
         } or do {
             $result_string = "Video error!";
         };
