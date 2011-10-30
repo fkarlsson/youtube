@@ -5,7 +5,7 @@ use Data::Dumper;
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20111024';
+$VERSION = '20111030';
 %IRSSI = (
     authors     => 'tuqs',
     contact     => 'tuqs@core.ws',
@@ -26,6 +26,7 @@ $VERSION = '20111024';
 # 20111023 - improved regex and now uses youtube api instead
 # 20111023 - improved regex some more and added detection of removed videos >:)
 # 20111024 - fixed bug that caused certain id's to not work with api, fixed typo
+# 20111030 - FIXED.
 #
 # usage:
 # /script load youtube
@@ -68,26 +69,42 @@ sub uri_get {
 
     my $url = uri_parse($data); 
 
-    my $ua = LWP::UserAgent->new(env_proxy=>1, keep_alive=>1, timeout=>5); 
-    $ua->agent("irssi/$VERSION " . $ua->agent()); 
+    if ($url)
+    {
+        my $ua = LWP::UserAgent->new(env_proxy=>1, keep_alive=>1, timeout=>5); 
+        $ua->agent("irssi/$VERSION " . $ua->agent()); 
 
-    my $req = HTTP::Request->new('GET', $url); 
-    my $res = $ua->request($req);
+        my $req = HTTP::Request->new('GET', $url); 
+        my $res = $ua->request($req);
 
-    if ($res->is_success()) { 
-        my $json = JSON->new->utf8;
-        my $json_data = $json->decode($res->content());
         my $result_string = '';
+        my $json = JSON->new->utf8;
 
         eval {
-            $result_string = $json_data->{data}->{title};
-        } or do {
-            $result_string = "Video error!";
+            my $json_data = $json->decode($res->content());
+
+            if ($res->is_success()) { 
+                eval {
+                    $result_string = $json_data->{data}->{title};
+                } 
+                or do {
+                    $result_string = "Request successful, parsing error";
+                };
+            } 
+            else {
+                eval {
+                    $result_string = "Error $json_data->{error}->{code} $json_data->{error}->{message}";
+                } or do {
+                    $result_string = "Parsing error";
+                };
+            }
+        } 
+        or do {
+            $result_string = "Error " . $res->status_line;
         };
 
         return $result_string; 
-    } 
-    return 0;
+    }
 } 
 
 Irssi::signal_add_last('message public', 'uri_public'); 
