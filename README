@@ -1,6 +1,6 @@
 YouTube URI Lookup Irssi Script - It's better than your mama!
 
-Parses Youtube URIs and uses Youtube's Data API (http://code.google.com/apis/youtube/overview.html) to output the link info to the channel window.
+Parses Youtube URIs and uses Youtube's Data API v3 (https://developers.google.com/youtube/v3) to output the link info to the channel window.
 
 Also works in query windows, though you might get unexpected results if you are not using the "(msgs)" window for queries. Comments/improvments regarding this are more than welcome!
 

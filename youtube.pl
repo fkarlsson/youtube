@@ -5,7 +5,7 @@ use Data::Dumper;
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20111124';
+$VERSION = '20150508';
 %IRSSI = (
     authors     => 'tuqs',
     contact     => 'tuqs@core.ws',
@@ -29,6 +29,7 @@ $VERSION = '20111124';
 # 20111030 - FIXED.
 # 20111101 - added a super regex courtesy of ridgerunner (http://stackoverflow.com/questions/5830387/php-regex-find-all-youtube-video-ids-in-string/5831191#5831191)
 # 20111124 - apparently the super regex didn't allow links without http://, so I made that part optional
+# 20150508 - now uses YouTube Data API v3
 #
 # usage:
 # /script load youtube
@@ -64,7 +65,7 @@ sub uri_parse {
     # Super RegEx courtesy of ridgerunner
     # http://stackoverflow.com/questions/5830387/php-regex-find-all-youtube-video-ids-in-string/5831191#5831191
     if ($url =~ /(?:https?:\/\/)?(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube\.com\S*[^\w\-\s])([\w\-]{11})(?=[^\w\-]|$)(?![?=&+%\w]*(?:['"][^<>]*>|<\/a>))[?=&+%\w]*/ig) { 
-        return "http://gdata.youtube.com/feeds/api/videos/$1?v=2&alt=jsonc";
+        return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=$1&fields=items%2Fsnippet%2Ftitle&key=AIzaSyASOeqt4XBPaqM1R7jF1mllk6HuDlbHqo8"
     } 
     return 0; 
 } 
@@ -89,7 +90,7 @@ sub uri_get {
 
             if ($res->is_success()) { 
                 eval {
-                    $result_string = $json_data->{data}->{title};
+                    $result_string = $json_data->{items}->[0]->{snippet}->{title};
                 } 
                 or do {
                     $result_string = "Request successful, parsing error";
