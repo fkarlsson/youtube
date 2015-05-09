@@ -4,7 +4,13 @@ Parses Youtube URIs and uses Youtube's Data API v3 (https://developers.google.co
 
 Also works in query windows, though you might get unexpected results if you are not using the "(msgs)" window for queries. Comments/improvments regarding this are more than welcome!
 
-Put the script in your Irssi scripts folder, run it and it just works. Tested in Perl 5.10.
+Put the script in your Irssi scripts folder, run it and then set the API key;
+
+`/set youtube_api_key YOUTUBE_API_KEY`
+
+To get a key, create an application in the Google Developer Console and generate a public API access key.
+
+Tested in Perl 5.10.
 
 License blah blah: Do whatever you want with it, give credit to me if you think I deserve it. :)
 

@@ -5,7 +5,7 @@ use Data::Dumper;
 use LWP::UserAgent;
 
 use Irssi;
-$VERSION = '20150508';
+$VERSION = '20150509';
 %IRSSI = (
     authors     => 'tuqs',
     contact     => 'tuqs@core.ws',
@@ -14,7 +14,6 @@ $VERSION = '20150508';
     license     => 'Public Domain',
     changed     => $VERSION,
 );
-
 
 #
 # 20081105 - function rewrite
@@ -30,12 +29,21 @@ $VERSION = '20150508';
 # 20111101 - added a super regex courtesy of ridgerunner (http://stackoverflow.com/questions/5830387/php-regex-find-all-youtube-video-ids-in-string/5831191#5831191)
 # 20111124 - apparently the super regex didn't allow links without http://, so I made that part optional
 # 20150508 - now uses YouTube Data API v3
+# 20150509 - now gets API Key from setting youtube_api_key
 #
 # usage:
 # /script load youtube
 # enjoy ;o)
 #
 
+# Load API key for YouTube Data API v3, needs to be genereted in the Google Developer Console
+my $api_key;
+Irssi::settings_add_str('youtube', 'youtube_api_key', 'API_KEY_HERE');
+reload_settings();
+
+sub reload_settings {
+    $api_key = Irssi::settings_get_str('youtube_api_key');
+}
 sub uri_public { 
     my ($server, $data, $nick, $mask, $target) = @_; 
     my $retval = uri_get($data); 
@@ -65,7 +73,7 @@ sub uri_parse {
     # Super RegEx courtesy of ridgerunner
     # http://stackoverflow.com/questions/5830387/php-regex-find-all-youtube-video-ids-in-string/5831191#5831191
     if ($url =~ /(?:https?:\/\/)?(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube\.com\S*[^\w\-\s])([\w\-]{11})(?=[^\w\-]|$)(?![?=&+%\w]*(?:['"][^<>]*>|<\/a>))[?=&+%\w]*/ig) { 
-        return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=$1&fields=items%2Fsnippet%2Ftitle&key=AIzaSyASOeqt4XBPaqM1R7jF1mllk6HuDlbHqo8"
+        return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=$1&fields=items%2Fsnippet%2Ftitle&key=$api_key"
     } 
     return 0; 
 } 
@@ -113,4 +121,5 @@ sub uri_get {
 } 
 
 Irssi::signal_add_last('message public', 'uri_public'); 
-Irssi::signal_add_last('message private', 'uri_private'); 
+Irssi::signal_add_last('message private', 'uri_private');
+Irssi::signal_add_last('setup changed', 'reload_settings'); 
